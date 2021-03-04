@@ -59,7 +59,7 @@ namespace RandomGithubWinFormsUI
             IGitHubRepo repo = await GetRandomGitHub();
             UpdateLabels(repo);
 
-            if(repo.Id == 342959905)
+            if(repo != null && repo.Id == 342959905)
             {
                 MessageBox.Show("No way! I found myself!");
             }
