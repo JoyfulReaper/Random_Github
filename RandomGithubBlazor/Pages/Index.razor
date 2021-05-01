@@ -1,0 +1,106 @@
+﻿@page "/"
+@inject IGithubAPI GithubAPI 
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-8">
+            <strong>ID:</strong> @repo?.Id
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Owner:</strong> @repo?.Owner.Login
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Owner's Github:</strong>
+            <a href="@repo?.Owner.Html_url">@repo?.Owner.Html_url</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Name:</strong> @repo?.Name
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Description:</strong> @repo?.Description
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Forks:</strong> @repo?.Forks_count
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Stars:</strong> @repo?.Stargazers_count
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>URL:</strong>
+            <a href="@repo?.Html_url">@repo?.Html_url</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>Language:</strong> @repo?.Language
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-8">
+            <strong>API Calls Remaining:</strong> @GithubAPI.RateLimitRemaining
+        </div>
+    </div>
+    <div class="row" mt-5>
+        <div class="col-8">
+            <button type="button" class="btn btn-primary" @onclick="GetRandomGithub">
+                Random Github!
+            </button>
+        </div>
+    </div>
+</div>
+
+@code
+{      
+    IGitHubRepo repo;
+    Random random = new Random();
+
+    int tryMax = 300000000;
+
+    protected async override void OnInitialized()
+    {
+        await GetRandomGithub();
+    }
+
+    private async Task GetRandomGithub()
+    {
+        repo = null;
+
+        while (repo?.Name == null)
+        {
+            int id = random.Next(1, tryMax);
+
+            try
+            {
+                repo = await GithubAPI.GetRepo(id);
+            }
+            catch (RateLimitedException)
+            {
+
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            if (repo?.Name == null)
+            {
+                tryMax = id - 1;
+            }
+        }
+        StateHasChanged();
+    }
+}
