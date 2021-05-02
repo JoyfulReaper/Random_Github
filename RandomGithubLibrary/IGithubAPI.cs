@@ -38,6 +38,6 @@ namespace RandomGithubLibrary
 
         void Initialize();
         void Initialize(string username, string token);
-        void Initialize(string clientId, string code, string client_secret);
+        Task Initialize(string clientId, string code, string client_secret);
     }
 }

@@ -82,19 +82,21 @@ namespace RandomGithubLibrary
             Initialized = true;
         }
 
-        public void Initialize(string clientId, string code, string client_secret)
+        public async Task Initialize(string clientId, string code, string client_secret)
         {
             AccessTokenRequest request = new AccessTokenRequest()
             {
-                Client_id = clientId,
-                Code = code,
-                Client_secret = client_secret
+                client_id = clientId,
+                code = code,
+                client_secret = client_secret
             };
 
-            var stringContent = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-            var response = client.PostAsync(new Uri("https://github.com/login/oauth/access_token"), stringContent);
+            var response = await client.PostAsJsonAsync("https://github.com/login/oauth/access_token", request);
+            var test = await response.Content.ReadAsStringAsync();
 
             Initialized = true;
+
+            throw new Exception("Test");
         }
 
         public async Task<GitHubRepo> GetRepo(string user, string repo)

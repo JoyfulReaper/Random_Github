@@ -6,10 +6,10 @@ namespace RandomGithubLibrary.Models
 {
     class AccessTokenRequest
     {
-        public string Client_id { get; set; }
-        public string Client_secret { get; set; }
-        public string Code { get; set; }
-        public string Redirect_url { get; set; }
-        public string State { get; set; }
+        public string client_id { get; set; }
+        public string client_secret { get; set; }
+        public string code { get; set; }
+        public string redirect_url { get; set; }
+        public string state { get; set; }
     }
 }

@@ -73,17 +73,17 @@
 
     protected async override void OnInitialized()
     {
-        Sleep(10);
+        //System.Threading.Thread.Sleep(TimeSpan.FromSeconds(10));
 
         var code = MyNavigationManager.QueryString("code");
-
+        
         //await GetRandomGithub();
         if (string.IsNullOrEmpty(code))
         {
             MyNavigationManager.NavigateTo("https://github.com/login/oauth/authorize?client_id=e1a8c32cb4c3b89efa1d");
         }
 
-        GithubAPI.Initialize("e1a8c32cb4c3b89efa1d", code, "a17cf11102568d005337d6642f432a79f036a69d");
+        await GithubAPI.Initialize("", code, "");
     }
 
     private async Task GetRandomGithub()
