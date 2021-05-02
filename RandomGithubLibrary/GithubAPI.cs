@@ -24,6 +24,7 @@ SOFTWARE.
 */
 
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using RandomGithubLibrary.Models;
 using System;
 using System.Collections.Generic;
@@ -39,8 +40,12 @@ namespace RandomGithubLibrary
     {
         public int RateLimitRemaining { get; private set; } = -1;
 
-        private readonly string userName;
-        private readonly string token;
+        public bool Initialized { get; private set; } = false;
+
+        private string _userName = string.Empty;
+        private string _token = string.Empty;
+        private string _access_token = string.Empty;
+
         private readonly HttpClient client = new HttpClient();
         private readonly IConfiguration configuration;
 
@@ -54,12 +59,42 @@ namespace RandomGithubLibrary
             client.DefaultRequestHeaders.UserAgent.Clear();
             client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("RandomGithub", "0.1"));
 
-            userName = configuration.GetSection("UserName").Value;
-            token = configuration.GetSection("Token").Value;
 
-            var authArray = Encoding.ASCII.GetBytes($"{userName}:{token}");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authArray));
             this.configuration = configuration;
+        }
+
+        /// <summary>
+        /// Attemp to Initialize with the username and token stored in appsettings.json
+        /// </summary>
+        public void Initialize()
+        {
+            Initialize(configuration.GetSection("UserName").Value, configuration.GetSection("Token").Value);
+        }
+
+        public void Initialize(string username, string token)
+        {
+            _userName = username;
+            _token = token;
+
+            var authArray = Encoding.ASCII.GetBytes($"{_userName}:{_token}");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authArray));
+
+            Initialized = true;
+        }
+
+        public void Initialize(string clientId, string code, string client_secret)
+        {
+            AccessTokenRequest request = new AccessTokenRequest()
+            {
+                Client_id = clientId,
+                Code = code,
+                Client_secret = client_secret
+            };
+
+            var stringContent = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+            var response = client.PostAsync(new Uri("https://github.com/login/oauth/access_token"), stringContent);
+
+            Initialized = true;
         }
 
         public async Task<GitHubRepo> GetRepo(string user, string repo)

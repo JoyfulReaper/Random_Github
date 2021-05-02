@@ -44,6 +44,7 @@ namespace RandomGithubConsoleUI
             var config = serviceProvider.GetRequiredService<IConfiguration>();
             var api = serviceProvider.GetRequiredService<IGithubAPI>();
 
+            api.Initialize();
             IGitHubRepo repo = null;
 
             bool again = true;

@@ -51,6 +51,8 @@ namespace RandomGithubWinFormsUI
             this.githubAPI = githubAPI;
             this.configuration = configuration;
 
+            githubAPI.Initialize();
+
             UpdateLabels(null);
         }
 

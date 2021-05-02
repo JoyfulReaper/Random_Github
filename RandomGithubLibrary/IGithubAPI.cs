@@ -35,5 +35,9 @@ namespace RandomGithubLibrary
         Task<GitHubRepo> GetRepo(int id);
         Task<GitHubRepo> GetRepo(string user, string repo);
         Task<GitHubUser> GetUser(string user);
+
+        void Initialize();
+        void Initialize(string username, string token);
+        void Initialize(string clientId, string code, string client_secret);
     }
 }
