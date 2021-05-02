@@ -84,6 +84,8 @@ namespace RandomGithubLibrary
 
         public async Task Initialize(string clientId, string code, string client_secret)
         {
+            HttpClient xClient = new HttpClient();
+
             AccessTokenRequest request = new AccessTokenRequest()
             {
                 client_id = clientId,
@@ -91,7 +93,7 @@ namespace RandomGithubLibrary
                 client_secret = client_secret
             };
 
-            var response = await client.PostAsJsonAsync("https://github.com/login/oauth/access_token", request);
+            var response = await xClient.PostAsJsonAsync(@"https://github.com/login/oauth/access_token", request);
             var test = await response.Content.ReadAsStringAsync();
 
             Initialized = true;
