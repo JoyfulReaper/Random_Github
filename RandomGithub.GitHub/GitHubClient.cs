@@ -12,13 +12,20 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
     {
         if (repositoryId < 0)
         {
-            throw new ArgumentOutOfRangeException(nameof(repositoryId));
+            throw new ArgumentOutOfRangeException(
+                nameof(repositoryId));
         }
 
+        using var response = await httpClient.GetAsync(
+            $"/repositories?since={repositoryId}",
+            cancellationToken);
+
+        ThrowIfRateLimited(response);
+
+        response.EnsureSuccessStatusCode();
+
         var repositories =
-            await httpClient.GetFromJsonAsync<List<GitHubRepository>>(
-                $"/repositories?since={repositoryId}",
-                cancellationToken);
+            await response.Content.ReadFromJsonAsync<List<GitHubRepository>>(cancellationToken);
 
         return repositories ?? [];
     }
@@ -45,5 +52,34 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
 
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    private static void ThrowIfRateLimited(
+    HttpResponseMessage response)
+    {
+        if (response.StatusCode is not
+            (HttpStatusCode.Forbidden or
+             HttpStatusCode.TooManyRequests))
+        {
+            return;
+        }
+
+        if (!response.Headers.TryGetValues(
+            "X-RateLimit-Remaining",
+            out var remaining) ||
+            remaining.FirstOrDefault() != "0")
+        {
+            return;
+        }
+
+        DateTimeOffset? resetAt = null;
+
+        if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetValues) &&
+            long.TryParse(resetValues.FirstOrDefault(), out var resetUnix))
+        {
+            resetAt = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+        }
+
+        throw new GitHubRateLimitException(resetAt);
     }
 }

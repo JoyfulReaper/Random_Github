@@ -7,16 +7,26 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
-builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
-{
-    client.BaseAddress = new Uri("https://api.github.com");
+builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
+    (services, client) =>
+    {
+        var configuration = services.GetRequiredService<IConfiguration>();
 
-    client.DefaultRequestHeaders.Accept.Add(
-        new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        client.BaseAddress = new Uri("https://api.github.com");
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        client.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("RandomGithub", "1.0"));
 
-    client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("RandomGithub", "1.0"));
-    client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
-});
+        client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
+
+        var token = configuration["GitHub:Token"];
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            client.DefaultRequestHeaders.Authorization =
+                new AuthenticationHeaderValue("Bearer", token);
+        }
+    });
 
 builder.Services.AddSingleton<RandomRepositoryService>();
 
