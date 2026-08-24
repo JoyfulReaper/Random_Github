@@ -8,6 +8,7 @@ public sealed class RandomRepositoryService
     private readonly long _maxRepositoryId;
     private readonly Queue<GitHubRepository> _repositoryPool = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private const int PoolBatchCount = 4;
 
     public RandomRepositoryService(IGitHubClient gitHubClient, IConfiguration configuration)
     {
@@ -41,18 +42,31 @@ public sealed class RandomRepositoryService
 
     private async Task RefillPoolAsync(CancellationToken cancellationToken)
     {
-        var since = Random.Shared.NextInt64(0, _maxRepositoryId);
+        var repositories = new List<GitHubRepository>();
 
-        var repositories = await _gitHubClient.GetPublicRepositoriesAfterAsync(
-            since,
-            cancellationToken);
+        for (var i = 0; i < PoolBatchCount; i++)
+        {
+            var since = Random.Shared.NextInt64(0, _maxRepositoryId);
 
-        if (repositories.Count == 0)
+            var batch = await _gitHubClient.GetPublicRepositoriesAfterAsync(
+                since,
+                cancellationToken);
+
+            repositories.AddRange(batch);
+        }
+
+        var shuffledRepositories = repositories
+            .DistinctBy(repository => repository.Id)
+            .ToArray();
+
+        Random.Shared.Shuffle(shuffledRepositories);
+
+        if (shuffledRepositories.Length == 0)
         {
             throw new InvalidOperationException("GitHub returned no repositories.");
         }
 
-        foreach (var repository in repositories.OrderBy(_ => Random.Shared.Next()))
+        foreach (var repository in shuffledRepositories)
         {
             _repositoryPool.Enqueue(repository);
         }

@@ -17,7 +17,7 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
         }
 
         using var response = await httpClient.GetAsync(
-            $"/repositories?since={repositoryId}",
+            $"/repositories?since={repositoryId}&per_page=100",
             cancellationToken);
 
         ThrowIfRateLimited(response);
