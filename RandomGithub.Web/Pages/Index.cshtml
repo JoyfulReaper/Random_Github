@@ -4,73 +4,83 @@
     ViewData["Title"] = "Random GitHub";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Random GitHub</h1>
-
-    <p>
-        Discover a random public repository on GitHub.
-    </p>
+<section class="hero">
+    <div>
+        <h1>Random GitHub</h1>
+        <p>Discover some random corner of GitHub you probably had no reason to ever find.</p>
+    </div>
 
     <form method="post">
-        <button type="submit" class="btn btn-primary">
+        <button type="submit" class="btn btn-primary btn-lg">
             Random Repository
         </button>
     </form>
-</div>
+</section>
 
 @if (Model.Repository is not null)
 {
-    <div class="mt-4">
-        <h2>
-            <a href="@Model.Repository.HtmlUrl"
-               target="_blank"
-               rel="noopener noreferrer">
-                @Model.Repository.FullName
-            </a>
-        </h2>
+    <article class="repository-card">
+        <header class="repository-header">
+            <img class="owner-avatar"
+                 src="@Model.Repository.Owner.AvatarUrl"
+                 alt="@Model.Repository.Owner.Login" />
 
-        @if (!string.IsNullOrWhiteSpace(
-            Model.Repository.Description))
-        {
-            <p>@Model.Repository.Description</p>
-        }
+            <div>
+                <h2>
+                    <a href="@Model.Repository.HtmlUrl" target="_blank" rel="noopener noreferrer">
+                        @Model.Repository.FullName
+                    </a>
+                </h2>
 
-        <dl>
-            <dt>Owner</dt>
-            <dd>
-                <a href="@Model.Repository.Owner.HtmlUrl"
+                <a class="owner-link"
+                   href="@Model.Repository.Owner.HtmlUrl"
                    target="_blank"
                    rel="noopener noreferrer">
                     @Model.Repository.Owner.Login
                 </a>
-            </dd>
+            </div>
+        </header>
 
-            <dt>Language</dt>
-            <dd>
-                @(Model.Repository.Language ?? "Unknown")
-            </dd>
-
-            <dt>Stars</dt>
-            <dd>@Model.Repository.StargazersCount</dd>
-
-            <dt>Forks</dt>
-            <dd>@Model.Repository.ForksCount</dd>
-
-            <dt>Repository ID</dt>
-            <dd>@Model.Repository.Id</dd>
-        </dl>
-        @if (!string.IsNullOrWhiteSpace(Model.ReadmeHtml))
+        @if (!string.IsNullOrWhiteSpace(Model.Repository.Description))
         {
-            <hr />
-
-            <section class="mt-4">
-                <h3>README</h3>
-
-                <div class="readme">
-                    @Html.Raw(Model.ReadmeHtml)
-                </div>
-            </section>
+            <p class="repository-description">
+                @Model.Repository.Description
+            </p>
         }
 
-    </div>
+        <div class="repository-meta">
+            <span>
+                <strong>Language</strong>
+                @(Model.Repository.Language ?? "Unknown")
+            </span>
+
+            <span>
+                <strong>Stars</strong>
+                @Model.Repository.StargazersCount
+            </span>
+
+            <span>
+                <strong>Forks</strong>
+                @Model.Repository.ForksCount
+            </span>
+
+            <span>
+                <strong>ID</strong>
+                @Model.Repository.Id
+            </span>
+        </div>
+    </article>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ReadmeHtml))
+    {
+        <section class="readme-card">
+            <header>
+                <h2>README</h2>
+            </header>
+
+            <div class="readme">
+                @Html.Raw(Model.ReadmeHtml)
+            </div>
+        </section>
+    }
 }

@@ -1,0 +1,145 @@
+.hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+    margin: 2rem 0 3rem;
+}
+
+    .hero h1 {
+        margin-bottom: 0.5rem;
+        font-size: 2.75rem;
+        font-weight: 700;
+    }
+
+    .hero p {
+        margin: 0;
+        color: #6c757d;
+        font-size: 1.1rem;
+    }
+
+.repository-card,
+.readme-card {
+    border: 1px solid #dee2e6;
+    border-radius: 0.75rem;
+    background: #fff;
+    box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 5%);
+}
+
+.repository-card {
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.repository-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+    .repository-header h2 {
+        margin: 0;
+        font-size: 1.6rem;
+    }
+
+        .repository-header h2 a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+            .repository-header h2 a:hover {
+                text-decoration: underline;
+            }
+
+.owner-avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.owner-link {
+    color: #6c757d;
+    text-decoration: none;
+}
+
+    .owner-link:hover {
+        text-decoration: underline;
+    }
+
+.repository-description {
+    margin: 1.5rem 0;
+    font-size: 1.05rem;
+    line-height: 1.6;
+}
+
+.repository-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+    .repository-meta span {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+.readme-card {
+    overflow: hidden;
+    margin-bottom: 3rem;
+}
+
+    .readme-card > header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #dee2e6;
+        background: #f8f9fa;
+    }
+
+        .readme-card > header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+.readme {
+    padding: 2rem;
+    overflow-x: auto;
+    line-height: 1.6;
+}
+
+    .readme img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    .readme pre {
+        overflow-x: auto;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background: #f6f8fa;
+    }
+
+    .readme code {
+        overflow-wrap: anywhere;
+    }
+
+@media (max-width: 768px) {
+    .hero {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+        .hero form,
+        .hero button {
+            width: 100%;
+        }
+
+    .repository-meta {
+        gap: 0.75rem 1.25rem;
+    }
+
+    .readme {
+        padding: 1.25rem;
+    }
+}
