@@ -12,13 +12,18 @@ public sealed class RandomRepositoryService
     private readonly long _maxRepositoryId;
     private readonly Queue<GitHubRepository> _repositoryPool = new();
     private readonly SemaphoreSlim _lock = new(1, 1);
+    private readonly ILogger<RandomRepositoryService> _logger;
 
-    public RandomRepositoryService(IGitHubClient gitHubClient, IConfiguration configuration)
+    public RandomRepositoryService(
+        IGitHubClient gitHubClient,
+        IConfiguration configuration,
+        ILogger<RandomRepositoryService> logger)
     {
         _gitHubClient = gitHubClient;
-        _maxRepositoryId = configuration.GetValue<long>("GitHub:InitialMaxRepositoryId");
+        _logger = logger;
 
-        if (_maxRepositoryId <= 0)
+        if (!long.TryParse(configuration["GitHub:InitialMaxRepositoryId"], out _maxRepositoryId) ||
+            _maxRepositoryId <= 0)
         {
             throw new InvalidOperationException("GitHub:InitialMaxRepositoryId must be configured.");
         }
@@ -36,7 +41,24 @@ public sealed class RandomRepositoryService
             }
             else if (ShouldOpportunisticallyRefill())
             {
-                await AddRandomBatchesAsync(1, cancellationToken);
+                try
+                {
+                    await AddRandomBatchesAsync(1, cancellationToken);
+                }
+                catch (HttpRequestException exception)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Opportunistic GitHub repository pool refill failed. Continuing with {RepositoryCount} cached repositories.",
+                        _repositoryPool.Count);
+                }
+                catch (GitHubRateLimitException exception)
+                {
+                    _logger.LogWarning(
+                        exception,
+                        "Opportunistic GitHub repository pool refill was rate limited. Continuing with {RepositoryCount} cached repositories.",
+                        _repositoryPool.Count);
+                }
             }
 
             return _repositoryPool.Dequeue();
