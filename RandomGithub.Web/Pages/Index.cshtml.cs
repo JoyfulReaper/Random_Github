@@ -1,11 +1,13 @@
 using Ganss.Xss;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.RateLimiting;
 using RandomGithub.GitHub;
 using RandomGithub.Web.Services;
 
 namespace RandomGithub.Web.Pages;
 
+[EnableRateLimiting("random-repository")]
 public sealed class IndexModel(
     RandomRepositoryService randomRepositoryService,
     IGitHubClient gitHubClient,

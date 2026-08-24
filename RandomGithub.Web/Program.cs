@@ -2,11 +2,32 @@ using Ganss.Xss;
 using RandomGithub.GitHub;
 using RandomGithub.Web.Services;
 using System.Net.Http.Headers;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("random-repository", httpContext =>
+    {
+        var clientIp = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+            clientIp,
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 30,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            });
+    });
+});
 
 builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
     (services, client) =>
@@ -45,7 +66,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
-
+app.UseRateLimiter();
 app.UseAuthorization();
 
 app.MapStaticAssets();
