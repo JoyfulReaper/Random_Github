@@ -29,7 +29,9 @@ public sealed class RandomRepositoryService
         }
     }
 
-    public async Task<GitHubRepository> GetRandomAsync(CancellationToken cancellationToken = default)
+    public async Task<GitHubRepository> GetRandomAsync(
+        CancellationToken cancellationToken = default,
+        bool excludeForks = false)
     {
         await _lock.WaitAsync(cancellationToken);
 
@@ -61,7 +63,20 @@ public sealed class RandomRepositoryService
                 }
             }
 
-            return _repositoryPool.Dequeue();
+            while (true)
+            {
+                while (_repositoryPool.Count > 0)
+                {
+                    var repository = _repositoryPool.Dequeue();
+
+                    if (!excludeForks || !repository.IsFork)
+                    {
+                        return repository;
+                    }
+                }
+
+                await AddRandomBatchesAsync(1, cancellationToken);
+            }
         }
         finally
         {

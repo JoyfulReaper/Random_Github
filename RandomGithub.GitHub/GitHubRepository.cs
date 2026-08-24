@@ -34,6 +34,9 @@ public sealed class GitHubRepository
 
     [JsonPropertyName("pushed_at")]
     public DateTimeOffset? PushedAt { get; init; }
+
+    [JsonPropertyName("fork")]
+    public bool IsFork { get; init; }
 }
 
 public sealed class GitHubOwner

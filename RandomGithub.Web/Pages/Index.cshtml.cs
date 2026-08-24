@@ -17,6 +17,9 @@ public sealed class IndexModel(
 
     public string? ReadmeHtml { get; private set; }
 
+    [BindProperty]
+    public bool ExcludeForks { get; set; }
+
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
         await LoadRepositoryAsync(cancellationToken);
@@ -31,7 +34,9 @@ public sealed class IndexModel(
 
     private async Task LoadRepositoryAsync(CancellationToken cancellationToken)
     {
-        var candidate = await randomRepositoryService.GetRandomAsync(cancellationToken);
+        var candidate = await randomRepositoryService.GetRandomAsync(
+            cancellationToken,
+            excludeForks: ExcludeForks);
 
         Repository = await gitHubClient.GetRepositoryAsync(
             candidate.Owner.Login,
