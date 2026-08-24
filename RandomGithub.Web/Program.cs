@@ -18,7 +18,7 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
     client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 });
 
-builder.Services.AddScoped<RandomRepositoryService>();
+builder.Services.AddSingleton<RandomRepositoryService>();
 
 var app = builder.Build();
 

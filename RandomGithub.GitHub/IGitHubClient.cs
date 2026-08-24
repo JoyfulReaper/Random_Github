@@ -6,4 +6,9 @@ public interface IGitHubClient
         GetPublicRepositoriesAfterAsync(
             long repositoryId,
             CancellationToken cancellationToken = default);
+
+    Task<string?> GetReadmeHtmlAsync(
+        string owner,
+        string repository,
+        CancellationToken cancellationToken = default);
 }
