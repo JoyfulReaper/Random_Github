@@ -1,4 +1,5 @@
 using Ganss.Xss;
+using Microsoft.AspNetCore.HttpOverrides;
 using RandomGithub.GitHub;
 using RandomGithub.Web.Services;
 using System.Net.Http.Headers;
@@ -8,6 +9,13 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorPages();
+
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders =
+        ForwardedHeaders.XForwardedFor |
+        ForwardedHeaders.XForwardedProto;
+});
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -55,6 +63,36 @@ builder.Services.AddSingleton<HtmlSanitizer>();
 builder.Services.AddSingleton<RandomRepositoryService>();
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+        context.Response.Headers["X-Frame-Options"] = "DENY";
+        context.Response.Headers["Referrer-Policy"] = "no-referrer";
+        context.Response.Headers["Permissions-Policy"] =
+            "camera=(), geolocation=(), microphone=(), payment=(), usb=()";
+
+        context.Response.Headers["Content-Security-Policy"] =
+            "default-src 'self'; " +
+            "img-src 'self' https: data:; " +
+            "style-src 'self' 'unsafe-inline'; " +
+            "script-src 'self'; " +
+            "font-src 'self' data:; " +
+            "connect-src 'self'; " +
+            "object-src 'none'; " +
+            "base-uri 'self'; " +
+            "form-action 'self'; " +
+            "frame-ancestors 'none';";
+
+        return Task.CompletedTask;
+    });
+
+    await next();
+});
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
