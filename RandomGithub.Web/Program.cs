@@ -50,6 +50,7 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
         }
     });
 
+builder.Services.AddSingleton<GitHubRateLimitStatus>();
 builder.Services.AddSingleton<HtmlSanitizer>();
 builder.Services.AddSingleton<RandomRepositoryService>();
 

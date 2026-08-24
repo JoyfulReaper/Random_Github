@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 
 namespace RandomGithub.GitHub;
 
-public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
+public sealed class GitHubClient(
+    HttpClient httpClient,
+    GitHubRateLimitStatus rateLimitStatus) : IGitHubClient
 {
     public async Task<IReadOnlyList<GitHubRepository>>
         GetPublicRepositoriesAfterAsync(
@@ -19,6 +21,8 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
         using var response = await httpClient.GetAsync(
             $"/repositories?since={repositoryId}&per_page=100",
             cancellationToken);
+
+        rateLimitStatus.Update(response);
 
         await ThrowIfRateLimitedAsync(response, cancellationToken);
 
@@ -43,7 +47,7 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
         request.Headers.Accept.ParseAdd("application/vnd.github.html+json");
 
         using var response = await httpClient.SendAsync(request, cancellationToken);
-
+        rateLimitStatus.Update(response);
         if (response.StatusCode == HttpStatusCode.NotFound)
         {
             return null;

@@ -1,4 +1,11 @@
-﻿<!DOCTYPE html>
+﻿@using RandomGithub.GitHub
+@inject GitHubRateLimitStatus GitHubRateLimitStatus
+
+@{
+    var rateLimit = GitHubRateLimitStatus.Latest;
+}
+
+<!DOCTYPE html>
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
@@ -46,6 +53,15 @@
             <span>
                 Random GitHub &middot; Wandering through other people's questionable life choices since 2021.
             </span>
+
+            @if (rateLimit is not null)
+            {
+                <span class="api-status">
+                    GitHub API &middot;
+                    @rateLimit.Remaining.ToString("N0") /
+                    @rateLimit.Limit.ToString("N0") remaining
+                </span>
+            }
 
             <a asp-page="/Privacy">
                 Privacy
