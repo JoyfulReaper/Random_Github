@@ -27,10 +27,10 @@ public sealed class GitHubRepository
     public GitHubOwner Owner { get; init; } = new();
 
     [JsonPropertyName("created_at")]
-    public DateTimeOffset CreatedAt { get; init; }
+    public DateTimeOffset? CreatedAt { get; init; }
 
     [JsonPropertyName("updated_at")]
-    public DateTimeOffset UpdatedAt { get; init; }
+    public DateTimeOffset? UpdatedAt { get; init; }
 
     [JsonPropertyName("pushed_at")]
     public DateTimeOffset? PushedAt { get; init; }

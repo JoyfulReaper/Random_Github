@@ -31,7 +31,19 @@ public sealed class IndexModel(
 
     private async Task LoadRepositoryAsync(CancellationToken cancellationToken)
     {
-        Repository = await randomRepositoryService.GetRandomAsync(cancellationToken);
+        var candidate = await randomRepositoryService.GetRandomAsync(cancellationToken);
+
+        Repository = await gitHubClient.GetRepositoryAsync(
+            candidate.Owner.Login,
+            candidate.Name,
+            cancellationToken);
+
+        if (Repository is null)
+        {
+            Repository = candidate;
+            ReadmeHtml = null;
+            return;
+        }
 
         var readmeHtml = await gitHubClient.GetReadmeHtmlAsync(
             Repository.Owner.Login,

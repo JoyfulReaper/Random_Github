@@ -11,4 +11,9 @@ public interface IGitHubClient
         string owner,
         string repository,
         CancellationToken cancellationToken = default);
+
+    Task<GitHubRepository?> GetRepositoryAsync(
+        string owner,
+        string repository,
+        CancellationToken cancellationToken = default);
 }

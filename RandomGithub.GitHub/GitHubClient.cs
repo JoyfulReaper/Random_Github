@@ -65,6 +65,35 @@ public sealed class GitHubClient(
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
+    public async Task<GitHubRepository?> GetRepositoryAsync(
+        string owner,
+        string repository,
+        CancellationToken cancellationToken = default)
+    {
+        using var response = await httpClient.GetAsync(
+            $"/repos/{Uri.EscapeDataString(owner)}/{Uri.EscapeDataString(repository)}",
+            cancellationToken);
+
+        rateLimitStatus.Update(response);
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+        {
+            return null;
+        }
+
+        await ThrowIfRateLimitedAsync(response, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
+        response.EnsureSuccessStatusCode();
+
+        return await response.Content.ReadFromJsonAsync<GitHubRepository>(
+            cancellationToken);
+    }
+
     private static async Task ThrowIfRateLimitedAsync(
         HttpResponseMessage response,
         CancellationToken cancellationToken)

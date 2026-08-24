@@ -27,7 +27,9 @@
 
             <div>
                 <h2>
-                    <a href="@Model.Repository.HtmlUrl" target="_blank" rel="noopener noreferrer">
+                    <a href="@Model.Repository.HtmlUrl"
+                       target="_blank"
+                       rel="noopener noreferrer">
                         @Model.Repository.FullName
                     </a>
                 </h2>
@@ -68,26 +70,33 @@
                 <strong>ID</strong>
                 @Model.Repository.Id
             </span>
-            <span>
-                <strong>Created</strong>
-                <time datetime="@Model.Repository.CreatedAt.ToString("O")">
-                    @Model.Repository.CreatedAt.ToString("MMM d, yyyy")
-                </time>
-            </span>
 
-            <span>
-                <strong>Updated</strong>
-                <time datetime="@Model.Repository.UpdatedAt.ToString("O")">
-                    @Model.Repository.UpdatedAt.ToString("MMM d, yyyy")
-                </time>
-            </span>
+            @if (Model.Repository.CreatedAt is { } createdAt)
+            {
+                <span>
+                    <strong>Created</strong>
+                    <time datetime="@createdAt.ToString("O")">
+                        @createdAt.ToString("MMM d, yyyy")
+                    </time>
+                </span>
+            }
 
-            @if (Model.Repository.PushedAt is not null)
+            @if (Model.Repository.UpdatedAt is { } updatedAt)
+            {
+                <span>
+                    <strong>Updated</strong>
+                    <time datetime="@updatedAt.ToString("O")">
+                        @updatedAt.ToString("MMM d, yyyy")
+                    </time>
+                </span>
+            }
+
+            @if (Model.Repository.PushedAt is { } pushedAt)
             {
                 <span>
                     <strong>Last push</strong>
-                    <time datetime="@Model.Repository.PushedAt.Value.ToString("O")">
-                        @Model.Repository.PushedAt.Value.ToString("MMM d, yyyy")
+                    <time datetime="@pushedAt.ToString("O")">
+                        @pushedAt.ToString("MMM d, yyyy")
                     </time>
                 </span>
             }
