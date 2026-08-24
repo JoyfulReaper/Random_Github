@@ -25,6 +25,15 @@ public sealed class GitHubRepository
     public int ForksCount { get; init; }
 
     public GitHubOwner Owner { get; init; } = new();
+
+    [JsonPropertyName("created_at")]
+    public DateTimeOffset CreatedAt { get; init; }
+
+    [JsonPropertyName("updated_at")]
+    public DateTimeOffset UpdatedAt { get; init; }
+
+    [JsonPropertyName("pushed_at")]
+    public DateTimeOffset? PushedAt { get; init; }
 }
 
 public sealed class GitHubOwner
