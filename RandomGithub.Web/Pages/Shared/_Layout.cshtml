@@ -1,45 +1,55 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - RandomGithub.Web</title>
+    <title>@ViewData["Title"] - Random GitHub</title>
+
     <script type="importmap"></script>
+
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/RandomGithub.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+    <header class="site-header">
+        <nav class="navbar navbar-expand">
             <div class="container-xl">
-                <a class="navbar-brand" asp-area="" asp-page="/Index">RandomGithub.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Privacy</a>
-                        </li>
-                    </ul>
+                <a class="navbar-brand" asp-page="/Index">
+                    Random GitHub
+                </a>
+
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" asp-page="/Index">
+                        Random
+                    </a>
+
+                    <a class="nav-link"
+                       href="https://github.com/JoyfulReaper/Random_Github"
+                       target="_blank"
+                       rel="noopener noreferrer">
+                        Source
+                    </a>
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
-        <main role="main" class="pb-3">
+
+    <div class="container-xl">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - RandomGithub.Web - <a asp-area="" asp-page="/Privacy">Privacy</a>
+    <footer class="site-footer">
+        <div class="container-xl">
+            <span>
+                Random GitHub &middot; Wandering through other people's questionable life choices since 2021.
+            </span>
+
+            <a asp-page="/Privacy">
+                Privacy
+            </a>
         </div>
     </footer>
 

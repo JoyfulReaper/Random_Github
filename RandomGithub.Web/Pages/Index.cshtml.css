@@ -14,16 +14,16 @@
 
     .hero p {
         margin: 0;
-        color: #6c757d;
+        color: var(--rg-muted);
         font-size: 1.1rem;
     }
 
 .repository-card,
 .readme-card {
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--rg-border);
     border-radius: 0.75rem;
-    background: #fff;
-    box-shadow: 0 0.25rem 1rem rgb(0 0 0 / 5%);
+    background: var(--rg-surface);
+    box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 20%);
 }
 
 .repository-card {
@@ -59,7 +59,7 @@
 }
 
 .owner-link {
-    color: #6c757d;
+    color: var(--rg-muted);
     text-decoration: none;
 }
 
@@ -78,7 +78,7 @@
     flex-wrap: wrap;
     gap: 1.5rem;
     padding-top: 1rem;
-    border-top: 1px solid #dee2e6;
+    border-top: 1px solid var(--rg-border);
 }
 
     .repository-meta span {
@@ -93,8 +93,8 @@
 
     .readme-card > header {
         padding: 1rem 1.5rem;
-        border-bottom: 1px solid #dee2e6;
-        background: #f8f9fa;
+        border-bottom: 1px solid var(--rg-border);
+        background: var(--rg-surface-raised);
     }
 
         .readme-card > header h2 {
@@ -116,12 +116,35 @@
     .readme pre {
         overflow-x: auto;
         padding: 1rem;
+        border: 1px solid var(--rg-border);
         border-radius: 0.5rem;
-        background: #f6f8fa;
+        background: var(--rg-bg);
     }
 
     .readme code {
+        color: #f0f6fc;
         overflow-wrap: anywhere;
+    }
+
+    .readme blockquote {
+        margin-left: 0;
+        padding-left: 1rem;
+        border-left: 0.25rem solid var(--rg-border);
+        color: var(--rg-muted);
+    }
+
+    .readme table {
+        display: block;
+        width: max-content;
+        max-width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+    }
+
+    .readme th,
+    .readme td {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--rg-border);
     }
 
 @media (max-width: 768px) {
