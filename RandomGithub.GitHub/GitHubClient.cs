@@ -37,8 +37,7 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
     {
         using var request = new HttpRequestMessage(
             HttpMethod.Get,
-            $"/repos/{Uri.EscapeDataString(owner)}/" +
-            $"{Uri.EscapeDataString(repository)}/readme");
+            $"/repos/{Uri.EscapeDataString(owner)}/{Uri.EscapeDataString(repository)}/readme");
 
         request.Headers.Accept.Clear();
         request.Headers.Accept.ParseAdd("application/vnd.github.html+json");
@@ -50,7 +49,15 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
             return null;
         }
 
+        ThrowIfRateLimited(response);
+
+        if (response.StatusCode == HttpStatusCode.Forbidden)
+        {
+            return null;
+        }
+
         response.EnsureSuccessStatusCode();
+
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
