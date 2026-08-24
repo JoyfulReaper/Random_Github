@@ -40,13 +40,13 @@ app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
 
-app.MapGet(
-    "/debug/random",
-    async (
-        RandomRepositoryService randomRepositoryService,
-        CancellationToken cancellationToken) =>
-    {
-        return await randomRepositoryService.GetRandomAsync(cancellationToken);
-    });
+//app.MapGet(
+//    "/debug/random",
+//    async (
+//        RandomRepositoryService randomRepositoryService,
+//        CancellationToken cancellationToken) =>
+//    {
+//        return await randomRepositoryService.GetRandomAsync(cancellationToken);
+//    });
 
 app.Run();

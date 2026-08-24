@@ -1,10 +1,63 @@
 ﻿@page
 @model IndexModel
 @{
-    ViewData["Title"] = "Home page";
+    ViewData["Title"] = "Random GitHub";
 }
 
 <div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+    <h1 class="display-4">Random GitHub</h1>
+
+    <p>
+        Discover a random public repository on GitHub.
+    </p>
+
+    <form method="post">
+        <button type="submit" class="btn btn-primary">
+            Random Repository
+        </button>
+    </form>
 </div>
+
+@if (Model.Repository is not null)
+{
+    <div class="mt-4">
+        <h2>
+            <a href="@Model.Repository.HtmlUrl"
+               target="_blank"
+               rel="noopener noreferrer">
+                @Model.Repository.FullName
+            </a>
+        </h2>
+
+        @if (!string.IsNullOrWhiteSpace(
+            Model.Repository.Description))
+        {
+            <p>@Model.Repository.Description</p>
+        }
+
+        <dl>
+            <dt>Owner</dt>
+            <dd>
+                <a href="@Model.Repository.Owner.HtmlUrl"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    @Model.Repository.Owner.Login
+                </a>
+            </dd>
+
+            <dt>Language</dt>
+            <dd>
+                @(Model.Repository.Language ?? "Unknown")
+            </dd>
+
+            <dt>Stars</dt>
+            <dd>@Model.Repository.StargazersCount</dd>
+
+            <dt>Forks</dt>
+            <dd>@Model.Repository.ForksCount</dd>
+
+            <dt>Repository ID</dt>
+            <dd>@Model.Repository.Id</dd>
+        </dl>
+    </div>
+}
