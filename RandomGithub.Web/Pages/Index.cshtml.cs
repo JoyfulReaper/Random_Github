@@ -29,6 +29,11 @@ public sealed class IndexModel(
     {
         Repository = await randomRepositoryService.GetRandomAsync(cancellationToken);
 
+        ReadmeHtml = await gitHubClient.GetReadmeHtmlAsync(
+            Repository.Owner.Login,
+            Repository.Name,
+            cancellationToken);
+
         return Page();
     }
 }
