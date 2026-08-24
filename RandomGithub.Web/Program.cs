@@ -1,3 +1,4 @@
+using Ganss.Xss;
 using RandomGithub.GitHub;
 using RandomGithub.Web.Services;
 using System.Net.Http.Headers;
@@ -28,6 +29,7 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
         }
     });
 
+builder.Services.AddSingleton<HtmlSanitizer>();
 builder.Services.AddSingleton<RandomRepositoryService>();
 
 var app = builder.Build();
