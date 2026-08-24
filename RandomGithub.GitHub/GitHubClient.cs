@@ -20,7 +20,7 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
             $"/repositories?since={repositoryId}&per_page=100",
             cancellationToken);
 
-        ThrowIfRateLimited(response);
+        await ThrowIfRateLimitedAsync(response, cancellationToken);
 
         response.EnsureSuccessStatusCode();
 
@@ -49,7 +49,7 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
             return null;
         }
 
-        ThrowIfRateLimited(response);
+        await ThrowIfRateLimitedAsync(response, cancellationToken);
 
         if (response.StatusCode == HttpStatusCode.Forbidden)
         {
@@ -61,32 +61,50 @@ public sealed class GitHubClient(HttpClient httpClient) : IGitHubClient
         return await response.Content.ReadAsStringAsync(cancellationToken);
     }
 
-    private static void ThrowIfRateLimited(
-    HttpResponseMessage response)
+    private static async Task ThrowIfRateLimitedAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
     {
         if (response.StatusCode is not
-            (HttpStatusCode.Forbidden or
-             HttpStatusCode.TooManyRequests))
+            (HttpStatusCode.Forbidden or HttpStatusCode.TooManyRequests))
         {
             return;
         }
 
-        if (!response.Headers.TryGetValues(
-            "X-RateLimit-Remaining",
-            out var remaining) ||
-            remaining.FirstOrDefault() != "0")
+        if (response.Headers.TryGetValues("X-RateLimit-Remaining", out var remaining) &&
+            remaining.FirstOrDefault() == "0")
         {
-            return;
+            DateTimeOffset? resetAt = null;
+
+            if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetValues) &&
+                long.TryParse(resetValues.FirstOrDefault(), out var resetUnix))
+            {
+                resetAt = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+            }
+
+            throw new GitHubRateLimitException(resetAt);
         }
 
-        DateTimeOffset? resetAt = null;
-
-        if (response.Headers.TryGetValues("X-RateLimit-Reset", out var resetValues) &&
-            long.TryParse(resetValues.FirstOrDefault(), out var resetUnix))
+        if (response.Headers.RetryAfter?.Delta is { } retryAfter)
         {
-            resetAt = DateTimeOffset.FromUnixTimeSeconds(resetUnix);
+            throw new GitHubRateLimitException(DateTimeOffset.UtcNow.Add(retryAfter));
         }
 
-        throw new GitHubRateLimitException(resetAt);
+        if (response.Headers.RetryAfter?.Date is { } retryAt)
+        {
+            throw new GitHubRateLimitException(retryAt);
+        }
+
+        if (response.StatusCode == HttpStatusCode.TooManyRequests)
+        {
+            throw new GitHubRateLimitException(DateTimeOffset.UtcNow.AddMinutes(1));
+        }
+
+        var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+        if (responseBody.Contains("rate limit", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new GitHubRateLimitException(DateTimeOffset.UtcNow.AddMinutes(1));
+        }
     }
 }

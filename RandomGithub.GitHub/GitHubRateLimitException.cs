@@ -1,8 +1,7 @@
 ﻿namespace RandomGithub.GitHub;
 
-public sealed class GitHubRateLimitException(
-    DateTimeOffset? resetAt = null)
+public sealed class GitHubRateLimitException(DateTimeOffset? retryAt = null)
     : Exception("GitHub API rate limit exceeded.")
 {
-    public DateTimeOffset? ResetAt { get; } = resetAt;
+    public DateTimeOffset? RetryAt { get; } = retryAt;
 }
