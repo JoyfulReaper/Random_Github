@@ -70,9 +70,7 @@ public sealed class IndexModel(
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var candidate = await randomRepositoryService.GetRandomAsync(
-                cancellationToken,
-                excludeForks: ExcludeForks);
+            var candidate = await randomRepositoryService.GetRandomAsync(cancellationToken, excludeForks: ExcludeForks);
 
             Repository = await gitHubClient.GetRepositoryAsync(
                 candidate.Owner.Login,
@@ -83,17 +81,18 @@ public sealed class IndexModel(
             {
                 Repository = candidate;
                 ReadmeHtml = null;
-                return;
             }
+            else
+            {
+                var readmeHtml = await gitHubClient.GetReadmeHtmlAsync(
+                    Repository.Owner.Login,
+                    Repository.Name,
+                    cancellationToken);
 
-            var readmeHtml = await gitHubClient.GetReadmeHtmlAsync(
-                Repository.Owner.Login,
-                Repository.Name,
-                cancellationToken);
-
-            ReadmeHtml = readmeHtml is null
-                ? null
-                : htmlSanitizer.Sanitize(readmeHtml);
+                ReadmeHtml = readmeHtml is null
+                    ? null
+                    : htmlSanitizer.Sanitize(readmeHtml);
+            }
 
             stopwatch.Stop();
 
