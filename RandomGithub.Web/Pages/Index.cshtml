@@ -96,15 +96,27 @@ else
     <div class="alert alert-warning" role="alert">
         <h2 class="h5">GitHub API limit reached</h2>
 
-        <p class="mb-0">
+        @if (Model.UsingPersonalAccessToken)
+        {
+            <p>
+                Your GitHub token has reached its current API limit.
+                You can wait for it to reset or forget the token above
+                to return to the site's shared allowance.
+            </p>
+        }
+        else
+        {
             <p>
                 Random GitHub has used up its shared GitHub API allowance.
                 You can wait for it to reset or use your own GitHub token above.
             </p>
+        }
+
+        <p class="mb-0">
             @if (Model.GitHubRetryAt is { } retryAt)
             {
                 <span>
-                    after
+                    GitHub says requests should be available again after
                     <time datetime="@retryAt.ToString("O")">
                         @retryAt.UtcDateTime.ToString("h:mm tt 'UTC'")
                     </time>.
@@ -112,7 +124,7 @@ else
             }
             else
             {
-                <span>in a little while.</span>
+                <span>Please try again in a little while.</span>
             }
         </p>
     </div>
