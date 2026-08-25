@@ -2,6 +2,8 @@
 
 Random GitHub picks a random public GitHub repository and shows you whatever strange corner of GitHub you probably had no reason to ever find.
 
+**Live:** https://randomgit.kgivler.com
+
 This is a rewrite of a small project I originally made in 2021.
 
 ## Features
