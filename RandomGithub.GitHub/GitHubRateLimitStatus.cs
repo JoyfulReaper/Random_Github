@@ -14,6 +14,14 @@ public sealed class GitHubRateLimitStatus
 
     internal void Update(HttpResponseMessage response)
     {
+        if (response.RequestMessage?.Options.TryGetValue(
+                GitHubRequestOptions.UsesPersonalToken,
+                out var usesPersonalToken) == true &&
+            usesPersonalToken)
+        {
+            return;
+        }
+
         if (!TryGetIntHeader(response, "X-RateLimit-Limit", out var limit) ||
             !TryGetIntHeader(response, "X-RateLimit-Remaining", out var remaining) ||
             !TryGetLongHeader(response, "X-RateLimit-Reset", out var resetUnix))

@@ -10,6 +10,21 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 
+builder.Services.AddDistributedMemoryCache();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromHours(8);
+
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+});
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddTransient<GitHubAuthenticationHandler>();
+
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
     options.ForwardedHeaders =
@@ -37,26 +52,22 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(
-    (services, client) =>
-    {
-        var configuration = services.GetRequiredService<IConfiguration>();
+builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
+{
+    client.BaseAddress = new Uri("https://api.github.com");
 
-        client.BaseAddress = new Uri("https://api.github.com");
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("RandomGithub", "1.0"));
+    client.DefaultRequestHeaders.Accept.Add(
+        new MediaTypeWithQualityHeaderValue(
+            "application/vnd.github+json"));
 
-        client.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2026-03-10");
+    client.DefaultRequestHeaders.UserAgent.Add(
+        new ProductInfoHeaderValue("RandomGithub", "1.0"));
 
-        var token = configuration["GitHub:Token"];
-
-        if (!string.IsNullOrWhiteSpace(token))
-        {
-            client.DefaultRequestHeaders.Authorization =
-                new AuthenticationHeaderValue("Bearer", token);
-        }
-    });
+    client.DefaultRequestHeaders.Add(
+        "X-GitHub-Api-Version",
+        "2026-03-10");
+})
+.AddHttpMessageHandler<GitHubAuthenticationHandler>();
 
 builder.Services.AddSingleton<GitHubRateLimitStatus>();
 builder.Services.AddSingleton<HtmlSanitizer>();
@@ -105,6 +116,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseRouting();
+app.UseSession();
 app.UseRateLimiter();
 app.UseAuthorization();
 
