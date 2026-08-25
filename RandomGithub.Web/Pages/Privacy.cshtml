@@ -1,8 +1,81 @@
 ﻿@page
 @model PrivacyModel
 @{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Privacy";
 }
+
 <h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<p>
+    Random GitHub is intentionally simple. It does not require an account
+    and does not use advertising or third-party analytics.
+</p>
+
+<h2>GitHub personal access tokens</h2>
+
+<p>
+    You may optionally provide a fine-grained GitHub personal access token
+    so Random GitHub can use your GitHub API allowance instead of the site's
+    shared allowance.
+</p>
+
+<p>
+    Your token is stored only in the server-side session. The browser receives
+    a session cookie containing a session identifier, not the token itself.
+    The token is sent only to GitHub's API and is removed when you choose
+    <strong>Forget token</strong>, when the session expires, or when GitHub
+    rejects the token.
+</p>
+
+<p>
+    Random GitHub does not include your personal access token in logs or
+    Mission Control telemetry.
+</p>
+
+<h2>Mission Control telemetry</h2>
+
+<p>
+    When a random repository is successfully selected, Random GitHub may send
+    an event to my private Mission Control service for basic operational and
+    usage telemetry.
+</p>
+
+<p>The event may include:</p>
+
+<ul>
+    <li>The selected repository ID and name</li>
+    <li>Language, star count, and fork count</li>
+    <li>Whether the repository is a fork</li>
+    <li>Repository creation and last-push dates</li>
+    <li>Whether the Skip forks option was enabled</li>
+    <li>Whether a personal GitHub token was being used</li>
+    <li>Whether the repository had a README</li>
+    <li>How long the random selection took</li>
+</ul>
+
+<p>
+    The Mission Control event does not include your GitHub token or your
+    GitHub account identity.
+</p>
+
+<h2>Cookies</h2>
+
+<p>
+    Random GitHub uses a session cookie when needed for features such as the
+    optional personal GitHub token. It is not used for advertising or
+    cross-site tracking.
+</p>
+
+<h2>External services</h2>
+
+<p>
+    Random GitHub communicates with GitHub's API to retrieve public repository
+    information and rendered README content. Repository READMEs may also contain
+    images hosted by GitHub or other external sites, which your browser may
+    request when displaying the README.
+</p>
+
+<p>
+    Hosting, reverse-proxy, and network infrastructure may also process normal
+    request information such as IP addresses as part of serving the site.
+</p>
