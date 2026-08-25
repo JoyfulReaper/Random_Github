@@ -107,3 +107,77 @@ Clone the repository:
 ```powershell
 git clone https://github.com/JoyfulReaper/Random_Github.git
 cd Random_Github
+```
+
+Configure a GitHub token using user secrets:
+
+```powershell
+cd RandomGithub.Web
+dotnet user-secrets set "GitHub:Token" "github_pat_..."
+```
+
+Then run:
+
+```powershell
+dotnet run
+```
+
+The token should not be committed to `appsettings.json`.
+
+## Configuration
+
+The main configuration looks like:
+
+```json
+{
+  "GitHub": {
+    "InitialMaxRepositoryId": 1100000000,
+    "Token": ""
+  },
+  "MissionControl": {
+    "Enabled": false,
+    "BaseUrl": "https://missioncontrol.example.com",
+    "ApiKey": "",
+    "CloudflareAccessClientId": "",
+    "CloudflareAccessClientSecret": "",
+    "TimeoutMilliseconds": 1000
+  }
+}
+```
+
+For production, secrets should be supplied through environment variables or another secret store, for example:
+
+```text
+GitHub__Token
+MissionControl__ApiKey
+MissionControl__CloudflareAccessClientId
+MissionControl__CloudflareAccessClientSecret
+```
+
+The Cloudflare Access credentials are optional and are only required when the Mission Control endpoint itself is protected by a Cloudflare Access service-token policy.
+
+## Security notes
+
+Rendered GitHub README HTML is sanitized before being written to the page.
+
+The application also includes:
+
+- Per-client request rate limiting
+- Content Security Policy
+- Frame protection
+- MIME sniffing protection
+- Referrer restrictions
+- Permissions Policy
+- Trusted forwarded-header support for deployment behind a reverse proxy
+
+Production proxy trust and allowed-host configuration must be configured for the actual deployment environment.
+
+## Privacy
+
+Random GitHub does not require an account and does not use advertising or third-party analytics.
+
+See the site's **Privacy** page for details about session tokens, Mission Control telemetry, cookies, and external requests.
+
+## License
+
+See `LICENSE` for license information.
