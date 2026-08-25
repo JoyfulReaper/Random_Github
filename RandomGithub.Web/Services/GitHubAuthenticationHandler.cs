@@ -1,4 +1,5 @@
 ﻿using RandomGithub.GitHub;
+using System.Net;
 using System.Net.Http.Headers;
 
 namespace RandomGithub.Web.Services;
@@ -8,7 +9,7 @@ public sealed class GitHubAuthenticationHandler(
     IConfiguration configuration)
     : DelegatingHandler
 {
-    protected override Task<HttpResponseMessage> SendAsync(
+    protected override async Task<HttpResponseMessage> SendAsync(
         HttpRequestMessage request,
         CancellationToken cancellationToken)
     {
@@ -35,6 +36,18 @@ public sealed class GitHubAuthenticationHandler(
                 true);
         }
 
-        return base.SendAsync(request, cancellationToken);
+        var response = await base.SendAsync(
+            request,
+            cancellationToken);
+
+        if (usesPersonalToken &&
+            response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            response.Dispose();
+
+            throw new GitHubAuthenticationException();
+        }
+
+        return response;
     }
 }

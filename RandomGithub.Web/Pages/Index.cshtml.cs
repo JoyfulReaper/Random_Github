@@ -14,31 +14,70 @@ public sealed class IndexModel(
     HtmlSanitizer htmlSanitizer) : PageModel
 {
     public GitHubRepository? Repository { get; private set; }
+
     public string? ReadmeHtml { get; private set; }
+
     public bool GitHubRateLimited { get; private set; }
 
     public DateTimeOffset? GitHubRetryAt { get; private set; }
 
+    public bool PersonalTokenInvalid { get; private set; }
+
+    public bool UsingPersonalAccessToken =>
+        HttpContext.Session.GetString(
+            GitHubSessionKeys.PersonalAccessToken) is not null;
+
     [BindProperty]
     public bool ExcludeForks { get; set; }
 
-    public async Task OnGetAsync(CancellationToken cancellationToken)
+    [BindProperty]
+    public string? PersonalAccessToken { get; set; }
+
+    public async Task OnGetAsync(
+        CancellationToken cancellationToken)
     {
         await LoadRepositoryAsync(cancellationToken);
     }
 
-    public async Task<IActionResult> OnPostAsync(CancellationToken cancellationToken)
+    public async Task<IActionResult> OnPostAsync(
+        CancellationToken cancellationToken)
     {
         await LoadRepositoryAsync(cancellationToken);
 
         return Page();
     }
 
-    private async Task LoadRepositoryAsync(CancellationToken cancellationToken)
+    public IActionResult OnPostUseToken()
+    {
+        if (!string.IsNullOrWhiteSpace(PersonalAccessToken))
+        {
+            HttpContext.Session.SetString(
+                GitHubSessionKeys.PersonalAccessToken,
+                PersonalAccessToken.Trim());
+        }
+
+        PersonalAccessToken = null;
+
+        return RedirectToPage();
+    }
+
+    public IActionResult OnPostForgetToken()
+    {
+        HttpContext.Session.Remove(
+            GitHubSessionKeys.PersonalAccessToken);
+
+        return RedirectToPage();
+    }
+
+    private async Task LoadRepositoryAsync(
+        CancellationToken cancellationToken)
     {
         try
         {
-            var candidate = await randomRepositoryService.GetRandomAsync(cancellationToken);
+            var candidate =
+                await randomRepositoryService.GetRandomAsync(
+                    cancellationToken,
+                    excludeForks: ExcludeForks);
 
             Repository = await gitHubClient.GetRepositoryAsync(
                 candidate.Owner.Login,
@@ -60,6 +99,15 @@ public sealed class IndexModel(
             ReadmeHtml = readmeHtml is null
                 ? null
                 : htmlSanitizer.Sanitize(readmeHtml);
+        }
+        catch (GitHubAuthenticationException)
+        {
+            HttpContext.Session.Remove(
+                GitHubSessionKeys.PersonalAccessToken);
+
+            Repository = null;
+            ReadmeHtml = null;
+            PersonalTokenInvalid = true;
         }
         catch (GitHubRateLimitException exception)
         {
