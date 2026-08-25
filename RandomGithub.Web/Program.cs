@@ -1,4 +1,5 @@
 using Ganss.Xss;
+using JoyfulReaperLib.MissionControl;
 using Microsoft.AspNetCore.HttpOverrides;
 using RandomGithub.GitHub;
 using RandomGithub.Web.Services;
@@ -24,6 +25,7 @@ builder.Services.AddSession(options =>
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddTransient<GitHubAuthenticationHandler>();
+builder.Services.AddMissionControlClient(builder.Configuration.GetSection(MissionControlClientOptions.SectionName));
 
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {

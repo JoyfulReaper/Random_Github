@@ -1,9 +1,12 @@
 using Ganss.Xss;
+using JoyfulReaperLib.MissionControl;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.RateLimiting;
 using RandomGithub.GitHub;
+using RandomGithub.Web.Events;
 using RandomGithub.Web.Services;
+using System.Diagnostics;
 
 namespace RandomGithub.Web.Pages;
 
@@ -11,7 +14,9 @@ namespace RandomGithub.Web.Pages;
 public sealed class IndexModel(
     RandomRepositoryService randomRepositoryService,
     IGitHubClient gitHubClient,
-    HtmlSanitizer htmlSanitizer) : PageModel
+    HtmlSanitizer htmlSanitizer,
+    IMissionControlClient missionControlClient,
+    ILogger<IndexModel> logger) : PageModel
 {
     public GitHubRepository? Repository { get; private set; }
 
@@ -72,6 +77,9 @@ public sealed class IndexModel(
     private async Task LoadRepositoryAsync(
         CancellationToken cancellationToken)
     {
+        var occurredAt = DateTimeOffset.UtcNow;
+        var correlationId = Guid.NewGuid().ToString("N");
+        var stopwatch = Stopwatch.StartNew();
         try
         {
             var candidate =
@@ -99,6 +107,13 @@ public sealed class IndexModel(
             ReadmeHtml = readmeHtml is null
                 ? null
                 : htmlSanitizer.Sanitize(readmeHtml);
+
+            stopwatch.Stop();
+
+            await PublishRepositoryPickCompletedAsync(
+                stopwatch.ElapsedMilliseconds,
+                occurredAt,
+                correlationId);
         }
         catch (GitHubAuthenticationException)
         {
@@ -115,6 +130,48 @@ public sealed class IndexModel(
             ReadmeHtml = null;
             GitHubRateLimited = true;
             GitHubRetryAt = exception.RetryAt;
+        }
+    }
+
+    private async Task PublishRepositoryPickCompletedAsync(
+        long durationMilliseconds,
+        DateTimeOffset occurredAt,
+        string correlationId)
+    {
+        if (Repository is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await missionControlClient.TryPublishAsync(
+                eventType: RandomGithubEventTypes.RepositoryPickCompleted,
+                payload: new RepositoryPickCompletedEvent(
+                    RepositoryId: Repository.Id,
+                    FullName: Repository.FullName,
+                    Language: Repository.Language,
+                    Stars: Repository.StargazersCount,
+                    Forks: Repository.ForksCount,
+                    IsFork: Repository.IsFork,
+                    CreatedAt: Repository.CreatedAt,
+                    PushedAt: Repository.PushedAt,
+                    ExcludeForks: ExcludeForks,
+                    UsedPersonalToken: UsingPersonalAccessToken,
+                    HasReadme: !string.IsNullOrWhiteSpace(ReadmeHtml),
+                    DurationMilliseconds: durationMilliseconds),
+                occurredAt: occurredAt,
+                payloadTypeInfo:
+                    RandomGithubJsonContext.Default.RepositoryPickCompletedEvent,
+                correlationId: correlationId,
+                cancellationToken: CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Failed to publish repository-pick event {CorrelationId}.",
+                correlationId);
         }
     }
 }
