@@ -170,62 +170,74 @@
             </div>
         </section>
     }
-
-    @if (Model.UsingPersonalAccessToken)
-    {
-        <div class="alert alert-success d-flex justify-content-between align-items-center gap-3"
-             role="status">
+}
+@if (Model.UsingPersonalAccessToken)
+{
+    <div class="alert alert-success d-flex justify-content-between align-items-center gap-3"
+         role="status">
+        <div>
+            <strong>Using your GitHub token</strong>
             <div>
-                <strong>Using your GitHub token</strong>
-                <div>
-                    GitHub API requests for this session are using your personal access token.
-                </div>
+                GitHub API requests for this session are using your personal access token.
+            </div>
+        </div>
+
+        <form method="post" asp-page-handler="ForgetToken">
+            <button type="submit" class="btn btn-sm btn-outline-light">
+                Forget token
+            </button>
+        </form>
+    </div>
+}
+else
+{
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 card-title">
+                Use your own GitHub token
+            </h2>
+
+            <p class="card-text">
+                Optional. A fine-grained GitHub personal access token lets
+                Random GitHub use your own API allowance instead of the
+                site's shared allowance.
+            </p>
+
+            <p class="card-text small text-body-secondary">
+                The token only needs <strong>Public repositories</strong>
+                access with no additional repository or user permissions.
+                It is kept only in the server-side session and is not
+                persisted permanently.
+            </p>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap mb-3">
+                <a class="btn btn-sm btn-outline-secondary"
+                   href="https://github.com/JoyfulReaper/Random_Github/blob/main/RandomGithub.Web/Services/GitHubAuthenticationHandler.cs"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Inspect token handling source
+                </a>
+
+                <span class="small text-body-secondary">
+                    Assuming this server is running the published source, of course.
+                </span>
             </div>
 
-            <form method="post" asp-page-handler="ForgetToken">
-                <button type="submit" class="btn btn-sm btn-outline-light">
-                    Forget token
+            <form method="post"
+                  asp-page-handler="UseToken"
+                  class="d-flex gap-2 flex-wrap">
+                <input asp-for="PersonalAccessToken"
+                       type="password"
+                       class="form-control"
+                       placeholder="github_pat_..."
+                       autocomplete="off"
+                       aria-label="GitHub personal access token" />
+
+                <button type="submit"
+                        class="btn btn-outline-primary">
+                    Use token
                 </button>
             </form>
         </div>
-    }
-    else
-    {
-        <div class="card mb-4">
-            <div class="card-body">
-                <h2 class="h5 card-title">
-                    Use your own GitHub token
-                </h2>
-
-                <p class="card-text">
-                    Optional. A fine-grained GitHub personal access token lets
-                    Random GitHub use your own API allowance instead of the
-                    site's shared allowance.
-                </p>
-
-                <p class="card-text small text-body-secondary">
-                    The token only needs <strong>Public repositories</strong>
-                    access with no additional repository or user permissions.
-                    It is kept only in the server-side session and is not
-                    persisted permanently.
-                </p>
-
-                <form method="post"
-                      asp-page-handler="UseToken"
-                      class="d-flex gap-2 flex-wrap">
-                    <input asp-for="PersonalAccessToken"
-                           type="password"
-                           class="form-control"
-                           placeholder="github_pat_..."
-                           autocomplete="off"
-                           aria-label="GitHub personal access token" />
-
-                    <button type="submit"
-                            class="btn btn-outline-primary">
-                        Use token
-                    </button>
-                </form>
-            </div>
-        </div>
-    }
+    </div>
 }
