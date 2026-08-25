@@ -10,7 +10,7 @@
         <p>Discover some random corner of GitHub you probably had no reason to ever find.</p>
     </div>
 
-    <form method="post" class="d-flex align-items-center gap-3 flex-wrap">
+    <form method="get" class="d-flex align-items-center gap-3 flex-wrap">
         <button type="submit" class="btn btn-primary btn-lg">
             Random Repository
         </button>
@@ -74,6 +74,18 @@
 
 @if (Model.Repository is not null)
 {
+    @if (Model.IsSelfPick)
+    {
+        <div class="alert alert-warning self-pick-alert" role="status">
+            <strong>OH SHIT. IT PICKED ITSELF.</strong>
+
+            <div>
+                Random GitHub randomly selected Random GitHub.
+                No weighting. No cheating. The machine has become self-aware.
+            </div>
+        </div>
+    }
+
     <article class="repository-card">
         <header class="repository-header">
             <img class="owner-avatar"

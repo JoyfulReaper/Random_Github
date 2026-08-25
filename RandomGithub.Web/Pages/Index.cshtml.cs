@@ -19,20 +19,17 @@ public sealed class IndexModel(
     ILogger<IndexModel> logger) : PageModel
 {
     public GitHubRepository? Repository { get; private set; }
-
     public string? ReadmeHtml { get; private set; }
-
     public bool GitHubRateLimited { get; private set; }
-
     public DateTimeOffset? GitHubRetryAt { get; private set; }
 
     public bool PersonalTokenInvalid { get; private set; }
-
     public bool UsingPersonalAccessToken =>
-        HttpContext.Session.GetString(
-            GitHubSessionKeys.PersonalAccessToken) is not null;
+        HttpContext.Session.GetString(GitHubSessionKeys.PersonalAccessToken) is not null;
 
-    [BindProperty]
+    private const string SelfRepository = "JoyfulReaper/Random_Github";
+
+    [BindProperty(SupportsGet = true)]
     public bool ExcludeForks { get; set; }
 
     [BindProperty]
@@ -42,14 +39,6 @@ public sealed class IndexModel(
         CancellationToken cancellationToken)
     {
         await LoadRepositoryAsync(cancellationToken);
-    }
-
-    public async Task<IActionResult> OnPostAsync(
-        CancellationToken cancellationToken)
-    {
-        await LoadRepositoryAsync(cancellationToken);
-
-        return Page();
     }
 
     public IActionResult OnPostUseToken()
@@ -68,8 +57,7 @@ public sealed class IndexModel(
 
     public IActionResult OnPostForgetToken()
     {
-        HttpContext.Session.Remove(
-            GitHubSessionKeys.PersonalAccessToken);
+        HttpContext.Session.Remove(GitHubSessionKeys.PersonalAccessToken);
 
         return RedirectToPage();
     }
@@ -82,10 +70,9 @@ public sealed class IndexModel(
         var stopwatch = Stopwatch.StartNew();
         try
         {
-            var candidate =
-                await randomRepositoryService.GetRandomAsync(
-                    cancellationToken,
-                    excludeForks: ExcludeForks);
+            var candidate = await randomRepositoryService.GetRandomAsync(
+                cancellationToken,
+                excludeForks: ExcludeForks);
 
             Repository = await gitHubClient.GetRepositoryAsync(
                 candidate.Owner.Login,
@@ -114,11 +101,15 @@ public sealed class IndexModel(
                 stopwatch.ElapsedMilliseconds,
                 occurredAt,
                 correlationId);
+
+            if (IsSelfPick)
+            {
+                await PublishRepositorySelfPickAsync(occurredAt, correlationId);
+            }
         }
         catch (GitHubAuthenticationException)
         {
-            HttpContext.Session.Remove(
-                GitHubSessionKeys.PersonalAccessToken);
+            HttpContext.Session.Remove(GitHubSessionKeys.PersonalAccessToken);
 
             Repository = null;
             ReadmeHtml = null;
@@ -174,4 +165,39 @@ public sealed class IndexModel(
                 correlationId);
         }
     }
+
+    private async Task PublishRepositorySelfPickAsync(
+        DateTimeOffset occurredAt,
+        string correlationId)
+    {
+        if (Repository is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await missionControlClient.TryPublishAsync(
+                eventType: RandomGithubEventTypes.RepositorySelfPick,
+                payload: new RepositorySelfPickEvent(
+                    RepositoryId: Repository.Id,
+                    FullName: Repository.FullName,
+                    ExcludeForks: ExcludeForks,
+                    UsedPersonalToken: UsingPersonalAccessToken),
+                occurredAt: occurredAt,
+                payloadTypeInfo: RandomGithubJsonContext.Default.RepositorySelfPickEvent,
+                correlationId: correlationId,
+                cancellationToken: CancellationToken.None);
+        }
+        catch (Exception exception)
+        {
+            logger.LogWarning(
+                exception,
+                "Failed to publish repository self-pick event {CorrelationId}.",
+                correlationId);
+        }
+    }
+
+    public bool IsSelfPick =>
+        string.Equals(Repository?.FullName, SelfRepository, StringComparison.OrdinalIgnoreCase);
 }
