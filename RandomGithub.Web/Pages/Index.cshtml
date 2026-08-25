@@ -24,6 +24,31 @@
     </form>
 </section>
 
+@if (Model.GitHubRateLimited)
+{
+    <div class="alert alert-warning" role="alert">
+        <h2 class="h5">GitHub API limit reached</h2>
+
+        <p class="mb-0">
+            Random GitHub has used up its current GitHub API allowance.
+            Please try again
+            @if (Model.GitHubRetryAt is { } retryAt)
+            {
+                <span>
+                    after
+                    <time datetime="@retryAt.ToString("O")">
+                        @retryAt.UtcDateTime.ToString("h:mm tt 'UTC'")
+                    </time>.
+                </span>
+            }
+            else
+            {
+                <span>in a little while.</span>
+            }
+        </p>
+    </div>
+}
+
 @if (Model.Repository is not null)
 {
     <article class="repository-card">

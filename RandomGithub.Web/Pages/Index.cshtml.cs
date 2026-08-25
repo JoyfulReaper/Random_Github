@@ -14,8 +14,10 @@ public sealed class IndexModel(
     HtmlSanitizer htmlSanitizer) : PageModel
 {
     public GitHubRepository? Repository { get; private set; }
-
     public string? ReadmeHtml { get; private set; }
+    public bool GitHubRateLimited { get; private set; }
+
+    public DateTimeOffset? GitHubRetryAt { get; private set; }
 
     [BindProperty]
     public bool ExcludeForks { get; set; }
@@ -34,29 +36,37 @@ public sealed class IndexModel(
 
     private async Task LoadRepositoryAsync(CancellationToken cancellationToken)
     {
-        var candidate = await randomRepositoryService.GetRandomAsync(
-            cancellationToken,
-            excludeForks: ExcludeForks);
-
-        Repository = await gitHubClient.GetRepositoryAsync(
-            candidate.Owner.Login,
-            candidate.Name,
-            cancellationToken);
-
-        if (Repository is null)
+        try
         {
-            Repository = candidate;
-            ReadmeHtml = null;
-            return;
+            var candidate = await randomRepositoryService.GetRandomAsync(cancellationToken);
+
+            Repository = await gitHubClient.GetRepositoryAsync(
+                candidate.Owner.Login,
+                candidate.Name,
+                cancellationToken);
+
+            if (Repository is null)
+            {
+                Repository = candidate;
+                ReadmeHtml = null;
+                return;
+            }
+
+            var readmeHtml = await gitHubClient.GetReadmeHtmlAsync(
+                Repository.Owner.Login,
+                Repository.Name,
+                cancellationToken);
+
+            ReadmeHtml = readmeHtml is null
+                ? null
+                : htmlSanitizer.Sanitize(readmeHtml);
         }
-
-        var readmeHtml = await gitHubClient.GetReadmeHtmlAsync(
-            Repository.Owner.Login,
-            Repository.Name,
-            cancellationToken);
-
-        ReadmeHtml = readmeHtml is null
-            ? null
-            : htmlSanitizer.Sanitize(readmeHtml);
+        catch (GitHubRateLimitException exception)
+        {
+            Repository = null;
+            ReadmeHtml = null;
+            GitHubRateLimited = true;
+            GitHubRetryAt = exception.RetryAt;
+        }
     }
 }
