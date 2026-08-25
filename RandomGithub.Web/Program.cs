@@ -122,6 +122,10 @@ app.UseSession();
 app.UseRateLimiter();
 app.UseAuthorization();
 
+app.MapGet(
+    "/health/live",
+    () => Results.Text("healthy", "text/plain"));
+
 app.MapStaticAssets();
 app.MapRazorPages()
    .WithStaticAssets();
