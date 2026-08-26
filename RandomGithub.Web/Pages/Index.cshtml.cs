@@ -20,16 +20,15 @@ public sealed class IndexModel(
     VisitorIdProvider visitorIdProvider,
     ILogger<IndexModel> logger) : PageModel
 {
+    private const string SelfRepository = "JoyfulReaper/Random_Github";
+    private const string VisitRecordedSessionKey = "RandomGithub.VisitRecorded";
+
     public GitHubRepository? Repository { get; private set; }
     public string? ReadmeHtml { get; private set; }
     public bool GitHubRateLimited { get; private set; }
     public DateTimeOffset? GitHubRetryAt { get; private set; }
 
     public bool PersonalTokenInvalid { get; private set; }
-    public bool UsingPersonalAccessToken =>
-        HttpContext.Session.GetString(GitHubSessionKeys.PersonalAccessToken) is not null;
-
-    private const string SelfRepository = "JoyfulReaper/Random_Github";
 
     public SiteStats? Stats { get; private set; }
 
@@ -133,13 +132,23 @@ public sealed class IndexModel(
             ? visitorIdProvider.GetVisitorId(address.ToString())
             : null;
 
+    public bool UsingPersonalAccessToken =>
+        HttpContext.Session.GetString(GitHubSessionKeys.PersonalAccessToken) is not null;
+
     private async Task LoadStatsAsync()
     {
         var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
 
-        Stats = string.IsNullOrWhiteSpace(ip)
-            ? await siteStatsService.GetStatsAsync()
-            : await siteStatsService.RecordHitAsync(ip);
+        if (HttpContext.Session.GetString(VisitRecordedSessionKey) is not null ||
+            string.IsNullOrWhiteSpace(ip))
+        {
+            Stats = await siteStatsService.GetStatsAsync();
+            return;
+        }
+
+        Stats = await siteStatsService.RecordHitAsync(ip);
+
+        HttpContext.Session.SetString(VisitRecordedSessionKey, "1");
     }
 
     private async Task PublishRepositoryPickCompletedAsync(
