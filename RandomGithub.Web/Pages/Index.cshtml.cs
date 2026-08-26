@@ -41,8 +41,8 @@ public sealed class IndexModel(
     public async Task OnGetAsync(
         CancellationToken cancellationToken)
     {
-        await LoadStatsAsync();
         await LoadRepositoryAsync(cancellationToken);
+        await LoadStatsAsync();
     }
 
     public IActionResult OnPostUseToken()
@@ -97,6 +97,8 @@ public sealed class IndexModel(
                     ? null
                     : htmlSanitizer.Sanitize(readmeHtml);
             }
+
+            await siteStatsService.IncrementRandomRepositoriesServedAsync();
 
             stopwatch.Stop();
 

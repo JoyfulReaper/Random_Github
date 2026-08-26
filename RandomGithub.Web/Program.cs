@@ -86,6 +86,19 @@ const string statsSchema = """
         Hits INTEGER NOT NULL DEFAULT 1,
         LastSeen TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS AppStats (
+        Id INTEGER PRIMARY KEY CHECK (Id = 1),
+        RandomRepositoriesServed INTEGER NOT NULL DEFAULT 0
+    );
+
+    INSERT INTO AppStats (Id, RandomRepositoriesServed)
+    SELECT 1, 0
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM AppStats
+        WHERE Id = 1
+    );
     """;
 
 var statsConnectionString = SqliteDatabaseInitializer.Initialize("randomgithub.db", statsSchema);
