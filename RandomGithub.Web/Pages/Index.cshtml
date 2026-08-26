@@ -10,9 +10,19 @@
         <p>Discover some random corner of GitHub you probably had no reason to ever find.</p>
     </div>
 
-    <form method="post" class="d-flex align-items-center gap-3 flex-wrap">
-        <button type="submit" class="btn btn-primary btn-lg">
-            Random Repository
+    <form method="get"
+          id="random-repository-form"
+          class="d-flex align-items-center gap-3 flex-wrap">
+        <button type="submit"
+                id="random-repository-button"
+                class="btn btn-primary btn-lg">
+            <span id="random-repository-spinner"
+                  class="spinner-border spinner-border-sm me-2 d-none"
+                  aria-hidden="true"></span>
+
+            <span id="random-repository-button-text">
+                Random Repository
+            </span>
         </button>
 
         <div class="form-check">
@@ -74,6 +84,18 @@
 
 @if (Model.Repository is not null)
 {
+    @if (Model.IsSelfPick)
+    {
+        <div class="alert alert-warning self-pick-alert" role="status">
+            <strong>OH SHIT. IT PICKED ITSELF.</strong>
+
+            <div>
+                Random GitHub randomly selected Random GitHub.
+                No weighting. No cheating. The machine has become self-aware.
+            </div>
+        </div>
+    }
+
     <article class="repository-card">
         <header class="repository-header">
             <img class="owner-avatar"
@@ -171,6 +193,28 @@
         </section>
     }
 }
+
+@if (Model.Stats is not null)
+{
+    <div class="text-center text-body-secondary small mb-4">
+        <span>
+            @Model.Stats.TotalHits.ToString("N0") visits
+        </span>
+
+        <span class="mx-2">&middot;</span>
+
+        <span>
+            @Model.Stats.UniqueVisitors.ToString("N0") unique visitors
+        </span>
+
+        <span class="mx-2">&middot;</span>
+
+        <span>
+            @Model.Stats.RandomRepositoriesServed.ToString("N0") random repositories served
+        </span>
+    </div>
+}
+
 @if (Model.UsingPersonalAccessToken)
 {
     <div class="alert alert-success d-flex justify-content-between align-items-center gap-3"

@@ -6,7 +6,8 @@ public sealed class RandomRepositoryService
 {
     private const int PoolBatchCount = 4;
     private const int RepositoriesPerBatch = 100;
-    private const int OpportunisticRefillChance = 10;
+    private const int LowWaterRefillOneIn = 10;
+    private const int RandomRefillOneIn = 100;
 
     private readonly IGitHubClient _gitHubClient;
     private readonly long _maxRepositoryId;
@@ -41,7 +42,7 @@ public sealed class RandomRepositoryService
             {
                 await AddRandomBatchesAsync(PoolBatchCount, cancellationToken);
             }
-            else if (ShouldOpportunisticallyRefill())
+            else if (ShouldRefill())
             {
                 try
                 {
@@ -51,14 +52,14 @@ public sealed class RandomRepositoryService
                 {
                     _logger.LogWarning(
                         exception,
-                        "Opportunistic GitHub repository pool refill failed. Continuing with {RepositoryCount} cached repositories.",
+                        "GitHub repository pool refill failed. Continuing with {RepositoryCount} cached repositories.",
                         _repositoryPool.Count);
                 }
                 catch (GitHubRateLimitException exception)
                 {
                     _logger.LogWarning(
                         exception,
-                        "Opportunistic GitHub repository pool refill was rate limited. Continuing with {RepositoryCount} cached repositories.",
+                        "GitHub repository pool refill was rate limited. Continuing with {RepositoryCount} cached repositories.",
                         _repositoryPool.Count);
                 }
             }
@@ -84,12 +85,18 @@ public sealed class RandomRepositoryService
         }
     }
 
-    private bool ShouldOpportunisticallyRefill()
+    private bool ShouldRefill()
     {
-        var halfCapacity = PoolBatchCount * RepositoriesPerBatch / 2;
+        var capacity = PoolBatchCount * RepositoriesPerBatch;
+        var halfCapacity = capacity / 2;
 
-        return _repositoryPool.Count < halfCapacity &&
-               Random.Shared.Next(OpportunisticRefillChance) == 0;
+        if (_repositoryPool.Count < halfCapacity)
+        {
+            return Random.Shared.Next(LowWaterRefillOneIn) == 0;
+        }
+
+        return _repositoryPool.Count < capacity &&
+               Random.Shared.Next(RandomRefillOneIn) == 0;
     }
 
     private async Task AddRandomBatchesAsync(int batchCount, CancellationToken cancellationToken)
