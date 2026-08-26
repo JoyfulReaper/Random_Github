@@ -15,8 +15,13 @@ This is a rewrite of a small project I originally made in 2021.
 - Shared GitHub API allowance
 - Optional bring-your-own GitHub personal access token
 - Friendly GitHub API rate-limit handling
-- Request rate limiting
+- Per-client request rate limiting
+- Loading feedback while a repository is being selected
+- Public visit, unique-visitor, and repositories-served statistics
+- Privacy-preserving visitor IDs for telemetry
 - Mission Control telemetry for successful repository picks
+- A very unlikely self-pick easter egg if Random GitHub randomly selects itself
+- Automated service-level tests
 
 ## How random selection works
 
@@ -27,10 +32,20 @@ Random GitHub:
 1. Chooses random repository IDs across a configured ID range.
 2. Requests the public repositories following those IDs.
 3. Builds a shuffled in-memory pool from several batches.
-4. Returns repositories from that pool.
-5. Opportunistically refills the pool as it gets smaller.
+4. De-duplicates repositories by GitHub repository ID.
+5. Returns repositories from that pool.
+6. Refills the pool as it gets smaller.
 
-This avoids using GitHub's search API for normal repository discovery.
+An empty pool is initially filled from four GitHub API batches.
+
+After that, refilling uses two levels:
+
+- Below half capacity, there is a 1-in-10 chance per pick of fetching another batch.
+- Between half and full capacity, there is a 1-in-100 chance per pick of fetching another batch.
+
+This keeps the pool changing over time without requiring another GitHub API request for every random pick.
+
+Random GitHub does not use GitHub's search API for normal repository discovery.
 
 The selection is intentionally simple and is not mathematically uniform across every GitHub repository. Repository IDs contain gaps, so repositories following larger gaps have a somewhat greater chance of being selected.
 
@@ -64,30 +79,81 @@ The source responsible for applying the token to GitHub requests is:
 
 `RandomGithub.Web/Services/GitHubAuthenticationHandler.cs`
 
+## Public statistics
+
+Random GitHub keeps a small set of public usage statistics:
+
+- Total visits
+- Unique visitors
+- Random repositories served
+
+A visit is counted once per ASP.NET Core session rather than every time the **Random Repository** button is pressed.
+
+Unique visitors are tracked by the local `JoyfulReaperLib.WebStats.Sqlite` hit counter.
+
+The random-repositories-served counter increases whenever Random GitHub successfully produces a repository for the user, including when the detailed GitHub lookup fails and the queued repository data is used as a fallback.
+
+These statistics are stored in a local SQLite database.
+
+## Privacy-preserving visitor telemetry
+
+Random GitHub can correlate activity from repeat visitors in Mission Control without publishing raw IP addresses.
+
+For telemetry, the visitor IP address is normalized and passed through HMAC-SHA256 using a server-side secret key.
+
+Conceptually:
+
+```text
+normalized IP
+    |
+    v
+HMAC-SHA256(server secret, IP bytes)
+    |
+    v
+visitor ID
+````
+
+Only the resulting visitor ID is included in Mission Control events.
+
+The secret hashing key is never included in telemetry and should never be committed to the repository.
+
+IPv4-mapped IPv6 addresses are normalized to IPv4 before hashing so equivalent addresses produce the same visitor ID.
+
+If no visitor hashing key is configured, visitor IDs are omitted from telemetry.
+
 ## Mission Control
 
-Random GitHub can optionally publish successful repository selections to my private Mission Control telemetry service using `JoyfulReaperLib.MissionControl`.
+Random GitHub can optionally publish repository-selection telemetry to my private Mission Control service using `JoyfulReaperLib.MissionControl`.
 
 A repository-pick event may contain:
 
-- Repository ID
-- Repository name
-- Language
-- Star and fork counts
-- Fork status
-- Creation and last-push dates
-- Whether **Skip forks** was enabled
-- Whether a personal token was being used
-- Whether a README was available
-- Selection duration
+* Privacy-preserving visitor ID
+* Repository ID
+* Repository name
+* Language
+* Star and fork counts
+* Fork status
+* Creation and last-push dates
+* Whether **Skip forks** was enabled
+* Whether a personal token was being used
+* Whether a README was available
+* Selection duration
 
-It does **not** include the user's GitHub token or GitHub account identity.
+It does **not** include:
+
+* The user's GitHub token
+* The user's GitHub account identity
+* The visitor's raw IP address
+
+If Random GitHub naturally selects its own repository, a separate `repository-self-pick` telemetry event is also published using the same correlation ID as the normal repository-pick event.
+
+The self-pick has no increased probability or special weighting. It has to happen naturally.
 
 Mission Control is optional and disabled by default.
 
 ## Projects
 
-The solution contains two projects:
+The solution contains three projects:
 
 ### `RandomGithub.GitHub`
 
@@ -95,12 +161,22 @@ Reusable GitHub API client and GitHub response models.
 
 ### `RandomGithub.Web`
 
-ASP.NET Core Razor Pages application containing repository selection, UI, session token handling, rate limiting, README sanitization, and telemetry.
+ASP.NET Core Razor Pages application containing repository selection, UI, session handling, public statistics, rate limiting, README sanitization, privacy-preserving visitor IDs, and Mission Control telemetry.
+
+### `RandomGithub.Tests`
+
+xUnit test project covering service-level behavior including:
+
+* Visitor ID hashing and address normalization
+* Site statistics and the repositories-served counter
+* Initial repository pool loading
+* Fork filtering
+* Repository de-duplication
 
 ## Requirements
 
-- .NET 10 SDK
-- A GitHub personal access token is recommended for development
+* .NET 10 SDK
+* A GitHub personal access token is recommended for development
 
 ## Running locally
 
@@ -118,13 +194,25 @@ cd RandomGithub.Web
 dotnet user-secrets set "GitHub:Token" "github_pat_..."
 ```
 
+Configure a visitor hashing secret if you want visitor IDs in local Mission Control telemetry:
+
+```powershell
+dotnet user-secrets set "Telemetry:VisitorHashKey" "use-a-long-random-secret-here"
+```
+
 Then run:
 
 ```powershell
 dotnet run
 ```
 
-The token should not be committed to `appsettings.json`.
+Secrets should not be committed to `appsettings.json`.
+
+Run the test suite from the repository root with:
+
+```powershell
+dotnet test
+```
 
 ## Configuration
 
@@ -135,6 +223,9 @@ The main configuration looks like:
   "GitHub": {
     "InitialMaxRepositoryId": 1100000000,
     "Token": ""
+  },
+  "Telemetry": {
+    "VisitorHashKey": ""
   },
   "MissionControl": {
     "Enabled": false,
@@ -151,6 +242,7 @@ For production, secrets should be supplied through environment variables or anot
 
 ```text
 GitHub__Token
+Telemetry__VisitorHashKey
 MissionControl__ApiKey
 MissionControl__CloudflareAccessClientId
 MissionControl__CloudflareAccessClientSecret
@@ -164,13 +256,15 @@ Rendered GitHub README HTML is sanitized before being written to the page.
 
 The application also includes:
 
-- Per-client request rate limiting
-- Content Security Policy
-- Frame protection
-- MIME sniffing protection
-- Referrer restrictions
-- Permissions Policy
-- Trusted forwarded-header support for deployment behind a reverse proxy
+* Per-client request rate limiting
+* Content Security Policy
+* Frame protection
+* MIME sniffing protection
+* Referrer restrictions
+* Permissions Policy
+* Trusted forwarded-header support for deployment behind a reverse proxy
+
+Inline JavaScript is not permitted by the application's Content Security Policy; application JavaScript is served from local static files.
 
 Production proxy trust and allowed-host configuration must be configured for the actual deployment environment.
 
@@ -178,8 +272,12 @@ Production proxy trust and allowed-host configuration must be configured for the
 
 Random GitHub does not require an account and does not use advertising or third-party analytics.
 
-See the site's **Privacy** page for details about session tokens, Mission Control telemetry, cookies, and external requests.
+Public visitor statistics contain aggregate counts only.
+
+Mission Control uses a keyed visitor hash to correlate repeat activity without publishing raw visitor IP addresses.
+
+See the site's **Privacy** page for additional details about sessions, telemetry, cookies, local statistics, and external requests.
 
 ## License
 
-See `LICENSE` for license information.
+See `LICENSE.md` for license information.
