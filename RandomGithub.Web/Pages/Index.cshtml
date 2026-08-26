@@ -193,6 +193,22 @@
         </section>
     }
 }
+
+@if (Model.Stats is not null)
+{
+    <div class="text-center text-body-secondary small mb-4">
+        <span>
+            @Model.Stats.TotalHits.ToString("N0") visits
+        </span>
+
+        <span class="mx-2">&middot;</span>
+
+        <span>
+            @Model.Stats.UniqueVisitors.ToString("N0") unique visitors
+        </span>
+    </div>
+}
+
 @if (Model.UsingPersonalAccessToken)
 {
     <div class="alert alert-success d-flex justify-content-between align-items-center gap-3"

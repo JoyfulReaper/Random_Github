@@ -1,7 +1,11 @@
 using Ganss.Xss;
 using JoyfulReaperLib.MissionControl;
+using JoyfulReaperLib.Sqlite;
+using JoyfulReaperLib.WebStats.Sqlite;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Data.Sqlite;
 using RandomGithub.GitHub;
+using RandomGithub.Web.Options;
 using RandomGithub.Web.Services;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
@@ -74,6 +78,29 @@ builder.Services.AddHttpClient<IGitHubClient, GitHubClient>(client =>
 builder.Services.AddSingleton<GitHubRateLimitStatus>();
 builder.Services.AddSingleton<HtmlSanitizer>();
 builder.Services.AddSingleton<RandomRepositoryService>();
+
+
+const string statsSchema = """
+    CREATE TABLE IF NOT EXISTS Visitors (
+        IpAddress TEXT PRIMARY KEY,
+        Hits INTEGER NOT NULL DEFAULT 1,
+        LastSeen TEXT
+    );
+    """;
+
+var statsConnectionString = SqliteDatabaseInitializer.Initialize("randomgithub.db", statsSchema);
+
+builder.Services.Configure<TelemetryOptions>(builder.Configuration.GetSection(TelemetryOptions.SectionName));
+builder.Services.AddSingleton<VisitorIdProvider>();
+builder.Services.AddJoyfulReaperSqliteHitCounter(options =>
+{
+    options.ConnectionString = statsConnectionString;
+});
+
+builder.Services.AddScoped<SqliteConnection>(_ =>
+    new SqliteConnection(statsConnectionString));
+
+builder.Services.AddScoped<SiteStatsService>();
 
 var app = builder.Build();
 

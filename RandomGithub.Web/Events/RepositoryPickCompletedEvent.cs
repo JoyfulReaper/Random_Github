@@ -1,6 +1,7 @@
 ﻿namespace RandomGithub.Web.Events;
 
 public sealed record RepositoryPickCompletedEvent(
+    string? VisitorId,
     long RepositoryId,
     string FullName,
     string? Language,

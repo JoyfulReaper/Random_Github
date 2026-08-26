@@ -16,6 +16,8 @@ public sealed class IndexModel(
     IGitHubClient gitHubClient,
     HtmlSanitizer htmlSanitizer,
     IMissionControlClient missionControlClient,
+    SiteStatsService siteStatsService,
+    VisitorIdProvider visitorIdProvider,
     ILogger<IndexModel> logger) : PageModel
 {
     public GitHubRepository? Repository { get; private set; }
@@ -29,6 +31,8 @@ public sealed class IndexModel(
 
     private const string SelfRepository = "JoyfulReaper/Random_Github";
 
+    public SiteStats? Stats { get; private set; }
+
     [BindProperty(SupportsGet = true)]
     public bool ExcludeForks { get; set; }
 
@@ -38,6 +42,7 @@ public sealed class IndexModel(
     public async Task OnGetAsync(
         CancellationToken cancellationToken)
     {
+        await LoadStatsAsync();
         await LoadRepositoryAsync(cancellationToken);
     }
 
@@ -123,6 +128,20 @@ public sealed class IndexModel(
         }
     }
 
+    private string? VisitorId =>
+        HttpContext.Connection.RemoteIpAddress is { } address
+            ? visitorIdProvider.GetVisitorId(address.ToString())
+            : null;
+
+    private async Task LoadStatsAsync()
+    {
+        var ip = HttpContext.Connection.RemoteIpAddress?.ToString();
+
+        Stats = string.IsNullOrWhiteSpace(ip)
+            ? await siteStatsService.GetStatsAsync()
+            : await siteStatsService.RecordHitAsync(ip);
+    }
+
     private async Task PublishRepositoryPickCompletedAsync(
         long durationMilliseconds,
         DateTimeOffset occurredAt,
@@ -138,6 +157,7 @@ public sealed class IndexModel(
             await missionControlClient.TryPublishAsync(
                 eventType: RandomGithubEventTypes.RepositoryPickCompleted,
                 payload: new RepositoryPickCompletedEvent(
+                    VisitorId: VisitorId,
                     RepositoryId: Repository.Id,
                     FullName: Repository.FullName,
                     Language: Repository.Language,
@@ -179,6 +199,7 @@ public sealed class IndexModel(
             await missionControlClient.TryPublishAsync(
                 eventType: RandomGithubEventTypes.RepositorySelfPick,
                 payload: new RepositorySelfPickEvent(
+                    VisitorId: VisitorId,
                     RepositoryId: Repository.Id,
                     FullName: Repository.FullName,
                     ExcludeForks: ExcludeForks,
