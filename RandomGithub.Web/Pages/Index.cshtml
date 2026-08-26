@@ -10,9 +10,19 @@
         <p>Discover some random corner of GitHub you probably had no reason to ever find.</p>
     </div>
 
-    <form method="get" class="d-flex align-items-center gap-3 flex-wrap">
-        <button type="submit" class="btn btn-primary btn-lg">
-            Random Repository
+    <form method="get"
+          id="random-repository-form"
+          class="d-flex align-items-center gap-3 flex-wrap">
+        <button type="submit"
+                id="random-repository-button"
+                class="btn btn-primary btn-lg">
+            <span id="random-repository-spinner"
+                  class="spinner-border spinner-border-sm me-2 d-none"
+                  aria-hidden="true"></span>
+
+            <span id="random-repository-button-text">
+                Random Repository
+            </span>
         </button>
 
         <div class="form-check">
