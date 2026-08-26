@@ -8,17 +8,23 @@ public sealed class SiteStatsService(
     VisitorIdProvider visitorIdProvider,
     SqliteConnection dbConnection)
 {
-    public async Task<SiteStats> RecordHitAsync(
-        string ipAddress)
+    public async Task<SiteStats> RecordHitAsync(string ipAddress)
     {
-        var stats = await hitCounter.RecordHitAsync(ipAddress);
+        var visitorId = visitorIdProvider.GetVisitorId(ipAddress);
+
+        if (visitorId is null)
+        {
+            throw new InvalidOperationException("Visitor hashing must be configured to record visitor statistics.");
+        }
+
+        var stats = await hitCounter.RecordHitAsync(visitorId);
         var randomRepositoriesServed = await GetRandomRepositoriesServedAsync();
 
         return new SiteStats(
             stats.TotalHits,
             stats.UniqueVisitors,
             randomRepositoriesServed,
-            visitorIdProvider.GetVisitorId(ipAddress));
+            visitorId);
     }
 
     public async Task<SiteStats> GetStatsAsync()

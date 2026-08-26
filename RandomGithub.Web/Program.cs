@@ -101,7 +101,10 @@ const string statsSchema = """
     );
     """;
 
-var statsConnectionString = SqliteDatabaseInitializer.Initialize("randomgithub.db", statsSchema);
+var statsConnectionString = SqliteDatabaseInitializer.Initialize(
+    "randomgithub.db",
+    statsSchema,
+    Path.Combine(builder.Environment.ContentRootPath, "Data"));
 
 builder.Services.Configure<TelemetryOptions>(builder.Configuration.GetSection(TelemetryOptions.SectionName));
 builder.Services.AddSingleton<VisitorIdProvider>();
