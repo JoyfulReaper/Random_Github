@@ -26,8 +26,14 @@
         </button>
 
         <div class="form-check">
-            <input class="form-check-input" asp-for="ExcludeForks" />
-            <label class="form-check-label" asp-for="ExcludeForks">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="ExcludeForks"
+                   name="ExcludeForks"
+                   value="true"
+                   checked="@Model.ExcludeForks" />
+
+            <label class="form-check-label" for="ExcludeForks">
                 Skip forks
             </label>
         </div>
