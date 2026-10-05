@@ -250,6 +250,14 @@ MissionControl__CloudflareAccessClientSecret
 
 The Cloudflare Access credentials are optional and are only required when the Mission Control endpoint itself is protected by a Cloudflare Access service-token policy.
 
+## Hosting
+
+The production Random GitHub service runs on GreenCloud infrastructure.
+
+[GreenCloud VPS](https://greencloudvps.com/billing/aff.php?aff=10295)
+
+> Disclosure: This is an affiliate link. If you purchase through it, I may receive a commission at no additional cost to you.
+
 ## Security notes
 
 Rendered GitHub README HTML is sanitized before being written to the page.
