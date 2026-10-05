@@ -79,8 +79,28 @@ main {
 
     .site-footer .container-xl {
         display: flex;
-        justify-content: space-between;
-        gap: 1rem;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.4rem;
+        text-align: center;
+    }
+
+    .site-footer-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.45rem;
+    }
+
+    .site-footer-note {
+        font-size: 0.78rem;
+        opacity: 0.75;
+    }
+
+    .site-footer-divider {
+        margin: 0 0.25rem;
+        opacity: 0.5;
     }
 
     .site-footer a {

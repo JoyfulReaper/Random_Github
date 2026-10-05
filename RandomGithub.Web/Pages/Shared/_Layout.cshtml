@@ -53,22 +53,83 @@
 
     <footer class="site-footer">
         <div class="container-xl">
-            <span>
-                Random GitHub &middot; Wandering through other people's questionable life choices since 2021.
-            </span>
-
-            @if (rateLimit is not null)
-            {
-                <span class="api-status">
-                    Shared GitHub API &middot;
-                    @rateLimit.Remaining.ToString("N0") /
-                    @rateLimit.Limit.ToString("N0") remaining
+            <div class="site-footer-row">
+                <span>
+                    Random GitHub &middot; Wandering through other people's questionable life choices since 2021.
                 </span>
-            }
+            </div>
 
-            <a asp-page="/Privacy">
-                Privacy
-            </a>
+            <div class="site-footer-row">
+                <span>Also available on:</span>
+
+                <a href="https://randomgit.kgivler.com/"
+                   rel="noopener noreferrer">
+                    Clearnet
+                </a>
+
+                <span>&middot;</span>
+
+                <a href="http://git.ygg.kgivler.com/"
+                   rel="noopener noreferrer">
+                    Yggdrasil
+                </a>
+
+                <span>&middot;</span>
+
+                <a href="https://randomgit.dn42/"
+                   rel="noopener noreferrer">
+                    DN42
+                </a>
+
+                <span class="site-footer-divider">|</span>
+
+                <a href="https://github.com/JoyfulReaper/Random_Github"
+                   target="_blank"
+                   rel="noopener noreferrer">
+                    Project / Source
+                </a>
+            </div>
+
+            <div class="site-footer-note">
+                The optional "Use your own GitHub token" feature is unavailable on
+                the plain-HTTP Yggdrasil endpoint because its session cookie is Secure.
+            </div>
+
+            <div class="site-footer-note">
+                Repository images and other remote assets may load directly from GitHub
+                or other clearnet URLs and may not work on an isolated Yggdrasil or DN42 connection.
+            </div>
+
+            <div class="site-footer-row">
+                <span>Proudly hosted with</span>
+
+                <a href="https://greencloudvps.com/billing/aff.php?aff=10295"
+                   target="_blank"
+                   rel="sponsored noopener noreferrer">
+                    GreenCloud VPS
+                </a>
+            </div>
+
+            <div class="site-footer-note">
+                Affiliate link &mdash; I may earn a commission if you sign up through it.
+            </div>
+
+            <div class="site-footer-row">
+                @if (rateLimit is not null)
+                {
+                    <span class="api-status">
+                        Shared GitHub API &middot;
+                        @rateLimit.Remaining.ToString("N0") /
+                        @rateLimit.Limit.ToString("N0") remaining
+                    </span>
+
+                    <span>&middot;</span>
+                }
+
+                <a asp-page="/Privacy">
+                    Privacy
+                </a>
+            </div>
         </div>
     </footer>
 
